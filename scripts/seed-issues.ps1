@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env pwsh
 #
-# seed-issues.sh
+# seed-issues.ps1
 #
 # Creates the "Update customer", "Add product — API and unit tests",
 # "Delete customer — API and unit tests", and "Delete customer — acceptance
@@ -17,79 +17,88 @@
 # low-quality, off-template issue someone might add to the board directly, to
 # demonstrate what NOT to do.
 #
+# This is the PowerShell equivalent of seed-issues.sh, intended to run
+# unmodified on macOS, Linux, and Windows via PowerShell 7+ (pwsh).
+#
 # Usage:
-#   ./scripts/seed-issues.sh            # creates all five issues
-#   ./scripts/seed-issues.sh --dry-run  # prints what would be created, no API calls
+#   pwsh ./scripts/seed-issues.ps1              # creates all five issues
+#   pwsh ./scripts/seed-issues.ps1 -DryRun      # prints what would be created, no API calls
 #
 # Requirements:
+#   - PowerShell 7+ (pwsh) — https://aka.ms/powershell
 #   - GitHub CLI (`gh`) installed and authenticated (`gh auth login`)
 #   - Run from anywhere inside the repo (script resolves the repo automatically)
 
-set -euo pipefail
+[CmdletBinding()]
+param(
+    [switch]$DryRun
+)
 
-DRY_RUN=false
-if [[ "${1:-}" == "--dry-run" ]]; then
-  DRY_RUN=true
-fi
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
-if ! command -v gh >/dev/null 2>&1; then
-  echo "Error: GitHub CLI ('gh') is not installed. Install it from https://cli.github.com/" >&2
-  exit 1
-fi
-
-if ! gh auth status >/dev/null 2>&1; then
-  echo "Error: gh is not authenticated. Run 'gh auth login' first." >&2
-  exit 1
-fi
-
-REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
-LABEL="agent-task"
-
-echo "Repository: ${REPO}"
-
-ensure_label() {
-  if ! gh label list --repo "${REPO}" --json name --jq '.[].name' | grep -qx "${LABEL}"; then
-    echo "Label '${LABEL}' not found — creating it."
-    if [[ "${DRY_RUN}" == false ]]; then
-      gh label create "${LABEL}" \
-        --repo "${REPO}" \
-        --description "Task defined for an AI coding agent to implement" \
-        --color "5319E7"
-    fi
-  fi
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    Write-Error "GitHub CLI ('gh') is not installed. Install it from https://cli.github.com/"
+    exit 1
 }
 
-create_issue() {
-  local title="$1"
-  local body="$2"
-
-  echo "----------------------------------------"
-  echo "Creating issue: ${title}"
-
-  if [[ "${DRY_RUN}" == true ]]; then
-    echo "[dry-run] Title: ${title}"
-    echo "[dry-run] Body:"
-    echo "${body}"
-    LAST_ISSUE_NUMBER="<dry-run-issue-number>"
-    return
-  fi
-
-  local url
-  url="$(gh issue create \
-    --repo "${REPO}" \
-    --title "${title}" \
-    --label "${LABEL}" \
-    --body "${body}")"
-  echo "Created: ${url}"
-  LAST_ISSUE_NUMBER="${url##*/}"
+gh auth status *> $null
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "gh is not authenticated. Run 'gh auth login' first."
+    exit 1
 }
 
-ensure_label
+$Repo = gh repo view --json nameWithOwner --jq .nameWithOwner
+$Label = 'agent-task'
+$script:LastIssueNumber = $null
+
+Write-Host "Repository: $Repo"
+
+function Ensure-Label {
+    $existingLabels = gh label list --repo $Repo --json name --jq '.[].name'
+    if ($existingLabels -notcontains $Label) {
+        Write-Host "Label '$Label' not found — creating it."
+        if (-not $DryRun) {
+            gh label create $Label `
+                --repo $Repo `
+                --description "Task defined for an AI coding agent to implement" `
+                --color "5319E7"
+        }
+    }
+}
+
+function Create-Issue {
+    param(
+        [Parameter(Mandatory)][string]$Title,
+        [Parameter(Mandatory)][string]$Body
+    )
+
+    Write-Host "----------------------------------------"
+    Write-Host "Creating issue: $Title"
+
+    if ($DryRun) {
+        Write-Host "[dry-run] Title: $Title"
+        Write-Host "[dry-run] Body:"
+        Write-Host $Body
+        $script:LastIssueNumber = "<dry-run-issue-number>"
+        return
+    }
+
+    $url = gh issue create `
+        --repo $Repo `
+        --title $Title `
+        --label $Label `
+        --body $Body
+    Write-Host "Created: $url"
+    $script:LastIssueNumber = $url.Split('/')[-1]
+}
+
+Ensure-Label
 
 # ---------------------------------------------------------------------------
 # Issue 1: Update customer
 # ---------------------------------------------------------------------------
-read -r -d '' UPDATE_BODY <<'EOF' || true
+$UpdateBody = @'
 ### Context and inputs
 
 - Related issue/PR: none — this is the next endpoint to add after `POST /customers` (Add) and `GET /customers/{id}` (Get)
@@ -126,14 +135,14 @@ read -r -d '' UPDATE_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include both unit tests (success, not-found, validation-failure cases) AND acceptance tests (Gherkin scenarios exercising the endpoint end-to-end via `CustomerApiFactory`)
 
-EOF
+'@
 
-create_issue "[Agent Task]: Update customer" "${UPDATE_BODY}"
+Create-Issue -Title "[Agent Task]: Update customer" -Body $UpdateBody
 
 # ---------------------------------------------------------------------------
 # Issue 1b: Add product — API and unit tests
 # ---------------------------------------------------------------------------
-read -r -d '' ADD_PRODUCT_BODY <<'EOF' || true
+$AddProductBody = @'
 ### Context and inputs
 
 - Related issue/PR: none — this introduces a new `Product` entity and its first endpoint, following the same pattern used for `Customer`
@@ -168,14 +177,14 @@ read -r -d '' ADD_PRODUCT_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include unit tests covering the success case and each validation-failure case. Acceptance/automation tests are explicitly out of scope for this issue.
 
-EOF
+'@
 
-create_issue "[Agent Task]: Add product — API and unit tests" "${ADD_PRODUCT_BODY}"
+Create-Issue -Title "[Agent Task]: Add product — API and unit tests" -Body $AddProductBody
 
 # ---------------------------------------------------------------------------
 # Issue 2a: Delete customer — API and unit tests
 # ---------------------------------------------------------------------------
-read -r -d '' DELETE_DEV_BODY <<'EOF' || true
+$DeleteDevBody = @'
 ### Context and inputs
 
 - Related issue/PR: none — this is the next endpoint to add after `POST /customers` (Add) and `GET /customers/{id}` (Get)
@@ -209,15 +218,15 @@ read -r -d '' DELETE_DEV_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include unit tests (successful delete, not-found case). Acceptance/automation tests are explicitly out of scope for this issue.
 
-EOF
+'@
 
-create_issue "[Agent Task]: Delete customer — API and unit tests" "${DELETE_DEV_BODY}"
-DELETE_DEV_ISSUE="${LAST_ISSUE_NUMBER}"
+Create-Issue -Title "[Agent Task]: Delete customer — API and unit tests" -Body $DeleteDevBody
+$DeleteDevIssue = $script:LastIssueNumber
 
 # ---------------------------------------------------------------------------
 # Issue 2b: Delete customer — acceptance tests (depends on 2a)
 # ---------------------------------------------------------------------------
-read -r -d '' DELETE_AUTOMATION_BODY_TEMPLATE <<'EOF' || true
+$DeleteAutomationBodyTemplate = @'
 ### Context and inputs
 
 - Related issue/PR: depends on #__DEV_ISSUE__ — the `DELETE /customers/{id}` endpoint and its unit tests must be implemented and merged first
@@ -244,34 +253,34 @@ read -r -d '' DELETE_AUTOMATION_BODY_TEMPLATE <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: reusing or duplicating unit tests — this issue must add true end-to-end SpecFlow scenarios exercising delete-then-get via `CustomerApiFactory`
 
-EOF
-DELETE_AUTOMATION_BODY="${DELETE_AUTOMATION_BODY_TEMPLATE//__DEV_ISSUE__/${DELETE_DEV_ISSUE}}"
+'@
+$DeleteAutomationBody = $DeleteAutomationBodyTemplate -replace '__DEV_ISSUE__', $DeleteDevIssue
 
-create_issue "[Agent Task]: Delete customer — acceptance tests" "${DELETE_AUTOMATION_BODY}"
-
+Create-Issue -Title "[Agent Task]: Delete customer — acceptance tests" -Body $DeleteAutomationBody
 
 # ---------------------------------------------------------------------------
 # Issue 3: List customers (intentionally off-template — no labels, no context,
 # no success criteria, no boundaries. This is what a rushed, informal issue
 # looks like when the agent-task template isn't followed.)
 # ---------------------------------------------------------------------------
-LIST_BODY="can we get an endpoint to list all the customers? shouldn't be a big deal, just add it whenever"
+$ListBody = "can we get an endpoint to list all the customers? shouldn't be a big deal, just add it whenever"
 
-echo "----------------------------------------"
-echo "Creating issue: List customers"
+Write-Host "----------------------------------------"
+Write-Host "Creating issue: List customers"
 
-if [[ "${DRY_RUN}" == true ]]; then
-  echo "[dry-run] Title: List customers"
-  echo "[dry-run] Body:"
-  echo "${LIST_BODY}"
-  echo "[dry-run] Labels: (none — intentionally off-template)"
-else
-  url="$(gh issue create \
-    --repo "${REPO}" \
-    --title "List customers" \
-    --body "${LIST_BODY}")"
-  echo "Created: ${url}"
-fi
+if ($DryRun) {
+    Write-Host "[dry-run] Title: List customers"
+    Write-Host "[dry-run] Body:"
+    Write-Host $ListBody
+    Write-Host "[dry-run] Labels: (none — intentionally off-template)"
+}
+else {
+    $url = gh issue create `
+        --repo $Repo `
+        --title "List customers" `
+        --body $ListBody
+    Write-Host "Created: $url"
+}
 
-echo "----------------------------------------"
-echo "Done."
+Write-Host "----------------------------------------"
+Write-Host "Done."
