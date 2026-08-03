@@ -126,10 +126,6 @@ read -r -d '' UPDATE_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include both unit tests (success, not-found, validation-failure cases) AND acceptance tests (Gherkin scenarios exercising the endpoint end-to-end via `CustomerApiFactory`)
 
-### Boundaries
-
-- Allowed: `backend/src/CustomerManagement.Api/**`, `backend/tests/CustomerManagement.UnitTests/**`, `backend/tests/CustomerManagement.AcceptanceTests/**`
-- Not allowed: `frontend/**`, `training-resources/**`, CI/workflow files (`.github/**`), database migration files (a new migration is fine only if adding is unavoidable — for a plain update it should not require a schema change), unrelated modules
 EOF
 
 create_issue "[Agent Task]: Update customer" "${UPDATE_BODY}"
@@ -172,10 +168,6 @@ read -r -d '' ADD_PRODUCT_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include unit tests covering the success case and each validation-failure case. Acceptance/automation tests are explicitly out of scope for this issue.
 
-### Boundaries
-
-- Allowed: `backend/src/CustomerManagement.Api/**` (including new `Models/Product.cs`, `Models/AddProductRequest.cs`, and a new migration under `Migrations/`), `backend/tests/CustomerManagement.UnitTests/**`
-- Not allowed: `backend/tests/CustomerManagement.AcceptanceTests/**` (covered by a future follow-up automation issue), `frontend/**`, `training-resources/**`, CI/workflow files (`.github/**`), unrelated modules
 EOF
 
 create_issue "[Agent Task]: Add product — API and unit tests" "${ADD_PRODUCT_BODY}"
@@ -217,10 +209,6 @@ read -r -d '' DELETE_DEV_BODY <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: "tests pass" alone — the PR must include unit tests (successful delete, not-found case). Acceptance/automation tests are explicitly out of scope for this issue.
 
-### Boundaries
-
-- Allowed: `backend/src/CustomerManagement.Api/**`, `backend/tests/CustomerManagement.UnitTests/**`
-- Not allowed: `backend/tests/CustomerManagement.AcceptanceTests/**` (covered by the follow-up automation issue), `frontend/**`, `training-resources/**`, CI/workflow files (`.github/**`), database migration files, unrelated modules
 EOF
 
 create_issue "[Agent Task]: Delete customer — API and unit tests" "${DELETE_DEV_BODY}"
@@ -256,10 +244,6 @@ read -r -d '' DELETE_AUTOMATION_BODY_TEMPLATE <<'EOF' || true
 - Review/scan outcomes required: code review approval
 - Explicitly NOT sufficient: reusing or duplicating unit tests — this issue must add true end-to-end SpecFlow scenarios exercising delete-then-get via `CustomerApiFactory`
 
-### Boundaries
-
-- Allowed: `backend/tests/CustomerManagement.AcceptanceTests/**`
-- Not allowed: `backend/src/CustomerManagement.Api/**` (the endpoint should already exist from issue #__DEV_ISSUE__ — do not modify it here), `backend/tests/CustomerManagement.UnitTests/**`, `frontend/**`, `training-resources/**`, CI/workflow files (`.github/**`), unrelated modules
 EOF
 DELETE_AUTOMATION_BODY="${DELETE_AUTOMATION_BODY_TEMPLATE//__DEV_ISSUE__/${DELETE_DEV_ISSUE}}"
 
