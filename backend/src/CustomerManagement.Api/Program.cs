@@ -35,10 +35,10 @@ builder.Services.AddSwaggerGen(options =>
 
             **Current capabilities**
             - Add a new customer (`POST /customers`)
+            - Get a customer by ID (`GET /customers/{id}`)
 
             **Not included (yet)**
             - Authentication / authorisation
-            - Customer retrieval or search
             - Update or delete operations
             """,
         Contact = new OpenApiContact
@@ -190,6 +190,22 @@ app.MapPost("/customers", async (AddCustomerRequest request, AppDbContext db) =>
 .Produces<Customer>(StatusCodes.Status201Created)
 .ProducesValidationProblem(StatusCodes.Status400BadRequest)
 .Produces(StatusCodes.Status400BadRequest);
+
+// GET /customers/{id} — retrieves a single customer by their ID.
+app.MapGet("/customers/{id}", async (int id, AppDbContext db) =>
+{
+    var customer = await db.Customers.FindAsync(id);
+    return customer is null ? Results.NotFound() : Results.Ok(customer);
+})
+.WithName("GetCustomerById")
+.WithTags("Customers")
+.WithSummary("Get a customer by ID")
+.WithDescription(
+    "Retrieves a single customer record identified by the `id` route parameter. " +
+    "Returns `200 OK` with the customer JSON body if found. " +
+    "Returns `404 Not Found` if no customer with that ID exists.")
+.Produces<Customer>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound);
 
 app.Run();
 
