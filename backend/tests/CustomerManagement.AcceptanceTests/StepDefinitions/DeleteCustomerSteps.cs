@@ -1,4 +1,3 @@
-using System.Net;
 using CustomerManagement.AcceptanceTests.Support;
 using TechTalk.SpecFlow;
 using Xunit;
