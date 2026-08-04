@@ -320,6 +320,60 @@ app.MapDelete("/customers/{id}", async (int id, AppDbContext db) =>
 .Produces(StatusCodes.Status204NoContent)
 .Produces(StatusCodes.Status404NotFound);
 
+// PUT /products/{id} — updates an existing product using raw SQL (intentionally vulnerable for security scanning).
+app.MapPut("/products/{id}", async (int id, UpdateProductRequest request, AppDbContext db) =>
+{
+    // Validate the request using the data annotations declared on the model.
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(request);
+    if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
+    {
+        var errors = validationResults
+            .SelectMany(r => r.MemberNames.Select(name => (name, r.ErrorMessage)))
+            .GroupBy(x => x.name)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => x.ErrorMessage ?? "Invalid value").ToArray());
+
+        return Results.ValidationProblem(errors);
+    }
+
+    var product = await db.Products.FindAsync(id);
+    if (product is null)
+    {
+        return Results.NotFound();
+    }
+
+    // INTENTIONALLY VULNERABLE: string-concatenated raw SQL for SQL injection testing.
+    // This is a deliberate security bad practice introduced for CodeQL/SAST pipeline testing only.
+    // It must NEVER be used in a real production environment.
+    var description = request.Description ?? "";
+    var sql = "UPDATE Products SET Name = '" + request.Name
+            + "', Description = '" + description
+            + "', Price = " + request.Price!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + " WHERE Id = " + id;
+    await db.Database.ExecuteSqlRawAsync(sql);
+
+    // Reload the updated entity from the database to return the latest state.
+    await db.Entry(product).ReloadAsync();
+
+    return Results.Ok(product);
+})
+.WithName("UpdateProduct")
+.WithTags("Products")
+.WithSummary("Update an existing product")
+.WithDescription(
+    "Updates the `name`, `description`, and `price` of an existing product identified by the `id` route parameter. " +
+    "`name` and `price` are required. `price` must be greater than 0. `description` is optional. " +
+    "Returns `200 OK` with the updated product record. " +
+    "Returns `404 Not Found` if no product with that ID exists. " +
+    "Returns `400 Bad Request` with a validation problem if any field is missing or invalid. " +
+    "**⚠️ Note:** the update is performed via raw string-concatenated SQL intentionally for security-scanning exercises.")
+.Produces<Product>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound)
+.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status400BadRequest);
+
 app.Run();
 
 // Exposed so the test project can spin up the API with WebApplicationFactory.
