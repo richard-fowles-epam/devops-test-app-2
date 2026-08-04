@@ -20,10 +20,10 @@ public sealed class DeleteCustomerSteps
     public async Task WhenCustomerIsDeletedByTheirId_ExistingCustomer_SendsDeleteRequest()
     {
         // Arrange
-        Assert.NotNull(_world.CreatedCustomer);
+        Assert.NotNull(__world.CreatedCustomer);
 
         // Act
-        _state.Response = await _world.Client.DeleteAsync($"/customers/{_world.CreatedCustomer!.Id}");
+        __state.Response = await __world.Client.DeleteAsync($"/customers/{__world.CreatedCustomer!.Id}");
     }
 
     [When(@"a customer is deleted with a non-existent ID")]
