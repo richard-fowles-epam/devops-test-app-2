@@ -19,7 +19,7 @@ namespace CustomerManagement.AcceptanceTests.Features
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("TechTalk.SpecFlow", "3.9.0.0")]
     [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public partial class UpdateCustomerFeature : object, Xunit.IClassFixture<UpdateCustomerFeature.FixtureData>, System.IDisposable
+    public partial class DeleteCustomerFeature : object, Xunit.IClassFixture<DeleteCustomerFeature.FixtureData>, System.IDisposable
     {
         
         private static TechTalk.SpecFlow.ITestRunner testRunner;
@@ -28,10 +28,10 @@ namespace CustomerManagement.AcceptanceTests.Features
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
-#line 1 "UpdateCustomer.feature"
+#line 1 "DeleteCustomer.feature"
 #line hidden
         
-        public UpdateCustomerFeature(UpdateCustomerFeature.FixtureData fixtureData, CustomerManagement_AcceptanceTests_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
+        public DeleteCustomerFeature(DeleteCustomerFeature.FixtureData fixtureData, CustomerManagement_AcceptanceTests_XUnitAssemblyFixture assemblyFixture, Xunit.Abstractions.ITestOutputHelper testOutputHelper)
         {
             this._testOutputHelper = testOutputHelper;
             this.TestInitialize();
@@ -40,8 +40,8 @@ namespace CustomerManagement.AcceptanceTests.Features
         public static void FeatureSetup()
         {
             testRunner = TechTalk.SpecFlow.TestRunnerManager.GetTestRunner();
-            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features", "Update customer", "    As an API consumer\n    I want to update customers via PUT /customers/{id}\n   " +
-                    " So that existing customer records can be modified", ProgrammingLanguage.CSharp, featureTags);
+            TechTalk.SpecFlow.FeatureInfo featureInfo = new TechTalk.SpecFlow.FeatureInfo(new System.Globalization.CultureInfo("en-US"), "Features", "Delete customer", "    As an API consumer\n    I want to delete a customer by their ID via DELETE /cu" +
+                    "stomers/{id}\n    So that I can remove a customer record from the system", ProgrammingLanguage.CSharp, featureTags);
             testRunner.OnFeatureStart(featureInfo);
         }
         
@@ -81,14 +81,14 @@ namespace CustomerManagement.AcceptanceTests.Features
             this.TestTearDown();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Update a customer with valid details")]
-        [Xunit.TraitAttribute("FeatureTitle", "Update customer")]
-        [Xunit.TraitAttribute("Description", "Update a customer with valid details")]
-        public void UpdateACustomerWithValidDetails()
+        [Xunit.SkippableFactAttribute(DisplayName="Deleting an existing customer returns 204 No Content")]
+        [Xunit.TraitAttribute("FeatureTitle", "Delete customer")]
+        [Xunit.TraitAttribute("Description", "Deleting an existing customer returns 204 No Content")]
+        public void DeletingAnExistingCustomerReturns204NoContent()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update a customer with valid details", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Deleting an existing customer returns 204 No Content", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 6
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -99,50 +99,39 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-                TechTalk.SpecFlow.Table table6 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table3 = new TechTalk.SpecFlow.Table(new string[] {
                             "FirstName",
                             "LastName",
                             "Email"});
-                table6.AddRow(new string[] {
-                            "Ada",
-                            "Lovelace",
-                            "ada@example.com"});
+                table3.AddRow(new string[] {
+                            "Grace",
+                            "Hopper",
+                            "grace@example.com"});
 #line 7
-    testRunner.Given("a customer with the following details", ((string)(null)), table6, "Given ");
+    testRunner.Given("a customer with the following details", ((string)(null)), table3, "Given ");
 #line hidden
 #line 10
     testRunner.And("the customer has been created via POST /customers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
 #line hidden
-                TechTalk.SpecFlow.Table table7 = new TechTalk.SpecFlow.Table(new string[] {
-                            "FirstName",
-                            "LastName",
-                            "Email"});
-                table7.AddRow(new string[] {
-                            "Alan",
-                            "Turing",
-                            "alan@example.com"});
 #line 11
-    testRunner.When("the customer is updated with the following details", ((string)(null)), table7, "When ");
+    testRunner.When("the customer is deleted by their ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
-#line 14
-    testRunner.Then("the response status is 200", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
-#line hidden
-#line 15
-    testRunner.And("the updated customer should match the new details", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line 12
+    testRunner.Then("the response status is 204", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             }
             this.ScenarioCleanup();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Update a customer with a non-existent ID")]
-        [Xunit.TraitAttribute("FeatureTitle", "Update customer")]
-        [Xunit.TraitAttribute("Description", "Update a customer with a non-existent ID")]
-        public void UpdateACustomerWithANon_ExistentID()
+        [Xunit.SkippableFactAttribute(DisplayName="Deleting a non-existent customer returns 404 Not Found")]
+        [Xunit.TraitAttribute("FeatureTitle", "Delete customer")]
+        [Xunit.TraitAttribute("Description", "Deleting a non-existent customer returns 404 Not Found")]
+        public void DeletingANon_ExistentCustomerReturns404NotFound()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Update a customer with a non-existent ID", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 17
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Deleting a non-existent customer returns 404 Not Found", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 14
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
@@ -152,33 +141,25 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-                TechTalk.SpecFlow.Table table8 = new TechTalk.SpecFlow.Table(new string[] {
-                            "FirstName",
-                            "LastName",
-                            "Email"});
-                table8.AddRow(new string[] {
-                            "Alan",
-                            "Turing",
-                            "alan@example.com"});
-#line 18
-    testRunner.When("a customer update is submitted for a non-existent ID", ((string)(null)), table8, "When ");
+#line 15
+    testRunner.When("a customer is deleted with a non-existent ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
 #line hidden
-#line 21
+#line 16
     testRunner.Then("the response status is 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             }
             this.ScenarioCleanup();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Reject an update with a missing required field")]
-        [Xunit.TraitAttribute("FeatureTitle", "Update customer")]
-        [Xunit.TraitAttribute("Description", "Reject an update with a missing required field")]
-        public void RejectAnUpdateWithAMissingRequiredField()
+        [Xunit.SkippableFactAttribute(DisplayName="After deleting a customer, a subsequent GET returns 404 Not Found")]
+        [Xunit.TraitAttribute("FeatureTitle", "Delete customer")]
+        [Xunit.TraitAttribute("Description", "After deleting a customer, a subsequent GET returns 404 Not Found")]
+        public void AfterDeletingACustomerASubsequentGETReturns404NotFound()
         {
             string[] tagsOfScenario = ((string[])(null));
             System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new System.Collections.Specialized.OrderedDictionary();
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Reject an update with a missing required field", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 23
+            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("After deleting a customer, a subsequent GET returns 404 Not Found", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 18
 this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((TagHelper.ContainsIgnoreTag(tagsOfScenario) || TagHelper.ContainsIgnoreTag(featureTags)))
@@ -188,33 +169,28 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-                TechTalk.SpecFlow.Table table9 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table4 = new TechTalk.SpecFlow.Table(new string[] {
                             "FirstName",
                             "LastName",
                             "Email"});
-                table9.AddRow(new string[] {
-                            "Ada",
-                            "Lovelace",
-                            "ada@example.com"});
-#line 24
-    testRunner.Given("a customer with the following details", ((string)(null)), table9, "Given ");
-#line hidden
-#line 27
-    testRunner.And("the customer has been created via POST /customers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
-#line hidden
-                TechTalk.SpecFlow.Table table10 = new TechTalk.SpecFlow.Table(new string[] {
-                            "FirstName",
-                            "LastName",
-                            "Email"});
-                table10.AddRow(new string[] {
-                            "",
+                table4.AddRow(new string[] {
+                            "Alan",
                             "Turing",
                             "alan@example.com"});
-#line 28
-    testRunner.When("the customer is updated with the following details", ((string)(null)), table10, "When ");
+#line 19
+    testRunner.Given("a customer with the following details", ((string)(null)), table4, "Given ");
 #line hidden
-#line 31
-    testRunner.Then("the response status is 400", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
+#line 22
+    testRunner.And("the customer has been created via POST /customers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+#line 23
+    testRunner.When("the customer is deleted by their ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "When ");
+#line hidden
+#line 24
+    testRunner.And("the deleted customer is requested by their ID", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
+#line hidden
+#line 25
+    testRunner.Then("the response status is 404", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "Then ");
 #line hidden
             }
             this.ScenarioCleanup();
@@ -227,12 +203,12 @@ this.ScenarioInitialize(scenarioInfo);
             
             public FixtureData()
             {
-                UpdateCustomerFeature.FeatureSetup();
+                DeleteCustomerFeature.FeatureSetup();
             }
             
             void System.IDisposable.Dispose()
             {
-                UpdateCustomerFeature.FeatureTearDown();
+                DeleteCustomerFeature.FeatureTearDown();
             }
         }
     }
