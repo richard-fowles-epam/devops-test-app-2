@@ -192,6 +192,48 @@ app.MapPost("/customers", async (AddCustomerRequest request, AppDbContext db) =>
 .ProducesValidationProblem(StatusCodes.Status400BadRequest)
 .Produces(StatusCodes.Status400BadRequest);
 
+// POST /products — adds a new product and returns the created record.
+app.MapPost("/products", async (AddProductRequest request, AppDbContext db) =>
+{
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(request);
+    if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
+    {
+        var errors = validationResults
+            .SelectMany(r => r.MemberNames.Select(name => (name, r.ErrorMessage)))
+            .GroupBy(x => x.name)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => x.ErrorMessage ?? "Invalid value").ToArray());
+
+        return Results.ValidationProblem(errors);
+    }
+
+    var product = new Product
+    {
+        Name = request.Name,
+        Description = request.Description,
+        Price = request.Price!.Value
+    };
+
+    db.Products.Add(product);
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/products/{product.Id}", product);
+})
+.WithName("AddProduct")
+.WithTags("Products")
+.WithSummary("Add a new product")
+.WithDescription(
+    "Creates a new product record in the database. " +
+    "`name` and `price` are required. `description` is optional. " +
+    "`price` must be greater than 0. " +
+    "Returns `201 Created` with the saved product, including its generated `id`. " +
+    "Returns `400 Bad Request` with a validation problem if `name` is missing or `price` is missing or invalid.")
+.Produces<Product>(StatusCodes.Status201Created)
+.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status400BadRequest);
+
 // GET /customers/{id} — retrieves a single customer by their ID.
 app.MapGet("/customers/{id}", async (int id, AppDbContext db) =>
 {
