@@ -99,16 +99,16 @@ this.ScenarioInitialize(scenarioInfo);
             else
             {
                 this.ScenarioStart();
-                TechTalk.SpecFlow.Table table3 = new TechTalk.SpecFlow.Table(new string[] {
+                TechTalk.SpecFlow.Table table5 = new TechTalk.SpecFlow.Table(new string[] {
                             "FirstName",
                             "LastName",
                             "Email"});
-                table3.AddRow(new string[] {
+                table5.AddRow(new string[] {
                             "Ada",
                             "Lovelace",
                             "ada@example.com"});
 #line 7
-    testRunner.Given("a customer with the following details", ((string)(null)), table3, "Given ");
+    testRunner.Given("a customer with the following details", ((string)(null)), table5, "Given ");
 #line hidden
 #line 10
     testRunner.And("the customer has been created via POST /customers", ((string)(null)), ((TechTalk.SpecFlow.Table)(null)), "And ");
