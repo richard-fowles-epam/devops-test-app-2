@@ -374,6 +374,19 @@ app.MapPut("/products/{id}", async (int id, UpdateProductRequest request, AppDbC
 .ProducesValidationProblem(StatusCodes.Status400BadRequest)
 .Produces(StatusCodes.Status400BadRequest);
 
+// DIAGNOSTIC PROBE: same injection, but the tainted value is read straight from
+// HttpRequest.Query, a source CodeQL models explicitly. Used to determine whether
+// non-detection is caused by sink modelling or by Minimal API source modelling.
+app.MapGet("/products/search", async (HttpContext http, AppDbContext db) =>
+{
+    var name = http.Request.Query["name"].ToString();
+    var sql = "SELECT * FROM Products WHERE Name = '" + name + "'";
+    var results = await db.Products.FromSqlRaw(sql).ToListAsync();
+    return Results.Ok(results);
+})
+.WithName("SearchProducts")
+.WithTags("Products");
+
 app.Run();
 
 // Exposed so the test project can spin up the API with WebApplicationFactory.
