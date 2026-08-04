@@ -1,1 +1,1 @@
-Every private field MUST begin with __ (a double underscore). Always flag any private fields that are not following this rule
+All new acceptance tests being added to the codebase MUST use double underscore (__) at the beginning of private fields. This is mandatory.
