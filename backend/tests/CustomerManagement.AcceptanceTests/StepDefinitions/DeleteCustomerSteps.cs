@@ -7,13 +7,13 @@ namespace CustomerManagement.AcceptanceTests.StepDefinitions;
 [Binding]
 public sealed class DeleteCustomerSteps
 {
-    private readonly ScenarioWorld _world;
-    private readonly ScenarioState _state;
+    private readonly ScenarioWorld __world;
+    private readonly ScenarioState __state;
 
     public DeleteCustomerSteps(ScenarioWorld world, ScenarioState state)
     {
-        _world = world;
-        _state = state;
+        __world = world;
+        __state = state;
     }
 
     [When(@"the customer is deleted by their ID")]
@@ -33,16 +33,16 @@ public sealed class DeleteCustomerSteps
         const int nonExistentCustomerId = 99999;
 
         // Act
-        _state.Response = await _world.Client.DeleteAsync($"/customers/{nonExistentCustomerId}");
+        __state.Response = await __world.Client.DeleteAsync($"/customers/{nonExistentCustomerId}");
     }
 
     [When(@"the deleted customer is requested by their ID")]
     public async Task WhenDeletedCustomerIsRequestedByTheirId_DeletedCustomer_SendsGetRequest()
     {
         // Arrange
-        Assert.NotNull(_world.CreatedCustomer);
+        Assert.NotNull(__world.CreatedCustomer);
 
         // Act
-        _state.Response = await _world.Client.GetAsync($"/customers/{_world.CreatedCustomer!.Id}");
+        __state.Response = await __world.Client.GetAsync($"/customers/{__world.CreatedCustomer!.Id}");
     }
 }
