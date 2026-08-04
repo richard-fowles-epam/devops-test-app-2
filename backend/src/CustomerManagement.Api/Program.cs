@@ -387,6 +387,27 @@ app.MapGet("/products/search", async (HttpContext http, AppDbContext db) =>
 .WithName("SearchProducts")
 .WithTags("Products");
 
+// DIAGNOSTIC PROBE B: classic ADO.NET sink (SqliteCommand.CommandText) with a
+// query-string source. This sink/source pair is explicitly modelled by CodeQL,
+// so it isolates whether EF Core raw-SQL methods are recognised as sinks.
+app.MapGet("/products/lookup", async (HttpContext http, AppDbContext db) =>
+{
+    var name = http.Request.Query["name"].ToString();
+    var conn = db.Database.GetDbConnection();
+    await conn.OpenAsync();
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = "SELECT Name FROM Products WHERE Name = '" + name + "'";
+    using var reader = await cmd.ExecuteReaderAsync();
+    var names = new List<string>();
+    while (await reader.ReadAsync())
+    {
+        names.Add(reader.GetString(0));
+    }
+    return Results.Ok(names);
+})
+.WithName("LookupProducts")
+.WithTags("Products");
+
 app.Run();
 
 // Exposed so the test project can spin up the API with WebApplicationFactory.
