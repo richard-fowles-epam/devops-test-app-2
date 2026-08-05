@@ -17,6 +17,12 @@
 # low-quality, off-template issue someone might add to the board directly, to
 # demonstrate what NOT to do.
 #
+# Finally, it creates two intentionally tiny issues that still follow the
+# template: "Update CI pipeline — print completion status" (add a final shell
+# step to ci.yml that prints "completed successfully" or "failed") and
+# "Update README — current lesson marker" (add one sentence to README.md
+# noting the student is up to the "Governing autonomy" lesson).
+#
 # This is the PowerShell equivalent of seed-issues.sh, intended to run
 # unmodified on macOS, Linux, and Windows via PowerShell 7+ (pwsh).
 #
@@ -281,6 +287,70 @@ else {
         --body $ListBody
     Write-Host "Created: $url"
 }
+
+# ---------------------------------------------------------------------------
+# Issue 4: Update CI pipeline — print completion status
+# ---------------------------------------------------------------------------
+$CiStatusBody = @'
+### Context and inputs
+
+- Related issue/PR: none — a tiny follow-up to the existing CI workflow
+- Starting point (branch, files, or module):
+  - `.github/workflows/ci.yml` — existing CI pipeline
+- Constraints (frameworks, versions, style rules):
+  - Add a final, simple shell step — no new tools or scripts, just a shell command
+- Relevant background/context:
+  - We want an obvious, human-readable signal at the very end of the CI run.
+
+### Expected outputs
+
+- Plan: a short written plan describing the approach
+- Pull request: adds a final step to `.github/workflows/ci.yml` that prints `completed successfully` if the pipeline succeeded, or `failed` otherwise
+- Evidence: a link to a CI run showing the new step's output
+
+### Success criteria
+
+- Correct behaviour:
+  - On a successful pipeline run, the final step outputs the exact text `completed successfully`.
+  - On a failed pipeline run, a step outputs the exact text `failed`.
+- Required checks: CI green
+- Explicitly NOT sufficient: adding the step without confirming both the success and failure output paths
+
+'@
+
+Create-Issue -Title "[Agent Task]: Update CI pipeline — print completion status" -Body $CiStatusBody
+
+# ---------------------------------------------------------------------------
+# Issue 5: Update README — current lesson marker
+# ---------------------------------------------------------------------------
+$ReadmeLessonBody = @'
+### Context and inputs
+
+- Related issue/PR: none — a tiny documentation update
+- Starting point (branch, files, or module):
+  - `README.md`
+- Constraints (frameworks, versions, style rules):
+  - One short sentence only — no other changes to the README
+- Relevant background/context:
+  - This is a training repository; the README should reflect which lesson the student is currently on.
+
+### Expected outputs
+
+- Plan: a short written plan describing the approach
+- Pull request: adds one sentence to `README.md` stating the student is up to the "Governing autonomy" lesson
+- Evidence: a diff/screenshot of the added sentence in `README.md`
+
+### Success criteria
+
+- Correct behaviour:
+  - `README.md` contains one new sentence stating the student is up to the "Governing autonomy" lesson.
+  - No other content in `README.md` is changed.
+- Required checks: CI green
+- Explicitly NOT sufficient: rewording or restructuring unrelated README sections
+
+'@
+
+Create-Issue -Title "[Agent Task]: Update README — current lesson marker" -Body $ReadmeLessonBody
 
 Write-Host "----------------------------------------"
 Write-Host "Done."
