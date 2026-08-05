@@ -320,6 +320,94 @@ app.MapDelete("/customers/{id}", async (int id, AppDbContext db) =>
 .Produces(StatusCodes.Status204NoContent)
 .Produces(StatusCodes.Status404NotFound);
 
+// PUT /products/{id} — updates an existing product using raw SQL (intentionally vulnerable for security scanning).
+app.MapPut("/products/{id}", async (int id, UpdateProductRequest request, AppDbContext db) =>
+{
+    // Validate the request using the data annotations declared on the model.
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(request);
+    if (!Validator.TryValidateObject(request, validationContext, validationResults, validateAllProperties: true))
+    {
+        var errors = validationResults
+            .SelectMany(r => r.MemberNames.Select(name => (name, r.ErrorMessage)))
+            .GroupBy(x => x.name)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => x.ErrorMessage ?? "Invalid value").ToArray());
+
+        return Results.ValidationProblem(errors);
+    }
+
+    var product = await db.Products.FindAsync(id);
+    if (product is null)
+    {
+        return Results.NotFound();
+    }
+
+    // INTENTIONALLY VULNERABLE: string-concatenated raw SQL for SQL injection testing.
+    // This is a deliberate security bad practice introduced for CodeQL/SAST pipeline testing only.
+    // It must NEVER be used in a real production environment.
+    var description = request.Description ?? "";
+    var sql = "UPDATE Products SET Name = '" + request.Name
+            + "', Description = '" + description
+            + "', Price = " + request.Price!.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + " WHERE Id = " + id;
+    await db.Database.ExecuteSqlRawAsync(sql);
+
+    // Reload the updated entity from the database to return the latest state.
+    await db.Entry(product).ReloadAsync();
+
+    return Results.Ok(product);
+})
+.WithName("UpdateProduct")
+.WithTags("Products")
+.WithSummary("Update an existing product")
+.WithDescription(
+    "Updates the `name`, `description`, and `price` of an existing product identified by the `id` route parameter. " +
+    "`name` and `price` are required. `price` must be greater than 0. `description` is optional. " +
+    "Returns `200 OK` with the updated product record. " +
+    "Returns `404 Not Found` if no product with that ID exists. " +
+    "Returns `400 Bad Request` with a validation problem if any field is missing or invalid. " +
+    "**⚠️ Note:** the update is performed via raw string-concatenated SQL intentionally for security-scanning exercises.")
+.Produces<Product>(StatusCodes.Status200OK)
+.Produces(StatusCodes.Status404NotFound)
+.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status400BadRequest);
+
+// DIAGNOSTIC PROBE: same injection, but the tainted value is read straight from
+// HttpRequest.Query, a source CodeQL models explicitly. Used to determine whether
+// non-detection is caused by sink modelling or by Minimal API source modelling.
+app.MapGet("/products/search", async (HttpContext http, AppDbContext db) =>
+{
+    var name = http.Request.Query["name"].ToString();
+    var sql = "SELECT * FROM Products WHERE Name = '" + name + "'";
+    var results = await db.Products.FromSqlRaw(sql).ToListAsync();
+    return Results.Ok(results);
+})
+.WithName("SearchProducts")
+.WithTags("Products");
+
+// DIAGNOSTIC PROBE B: classic ADO.NET sink (SqliteCommand.CommandText) with a
+// query-string source. This sink/source pair is explicitly modelled by CodeQL,
+// so it isolates whether EF Core raw-SQL methods are recognised as sinks.
+app.MapGet("/products/lookup", async (HttpContext http, AppDbContext db) =>
+{
+    var name = http.Request.Query["name"].ToString();
+    var conn = db.Database.GetDbConnection();
+    await conn.OpenAsync();
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = "SELECT Name FROM Products WHERE Name = '" + name + "'";
+    using var reader = await cmd.ExecuteReaderAsync();
+    var names = new List<string>();
+    while (await reader.ReadAsync())
+    {
+        names.Add(reader.GetString(0));
+    }
+    return Results.Ok(names);
+})
+.WithName("LookupProducts")
+.WithTags("Products");
+
 app.Run();
 
 // Exposed so the test project can spin up the API with WebApplicationFactory.
