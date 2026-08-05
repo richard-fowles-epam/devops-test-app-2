@@ -1,0 +1,6 @@
+# CODEOWNERS
+# These owners will be requested for review when someone opens a pull request
+# that modifies files matching the pattern below.
+# See https://docs.github.com/articles/about-code-owners for more info.
+
+.github/workflows/ @richard-fowles-epam
