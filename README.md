@@ -4,6 +4,8 @@ A small, beginner-friendly **customer management API** built with **.NET Minimal
 
 The application currently supports a single business capability: **add a new customer**.
 
+The student is currently up to the **Governing autonomy** lesson.
+
 ---
 
 ## 0. Templates — read this first (for agents)
