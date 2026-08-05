@@ -30,3 +30,12 @@ jobs:
 
       - name: Run tests
         run: dotnet test --no-build
+
+      - name: Print completion status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "completed successfully"
+          else
+            echo "failed"
+          fi
